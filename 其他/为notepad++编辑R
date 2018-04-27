@@ -1,0 +1,109 @@
+findfuns <- function(x) {
+
+if(require(x, character.only=TRUE)) {
+
+env <- paste("package", x, sep=":")
+
+nm <- ls(env, all=TRUE)
+
+nm[unlist(lapply(nm, function(n) exists(n, where=env,
+
+mode="function",
+
+inherits=FALSE)))]
+
+} else character(0)
+
+}
+
+z <- lapply(.packages(all.available = FALSE), findfuns)
+
+z <- unique(sort(unlist(z)))
+
+z <- unique(z[-which((regexpr("<-", z ))>0)])
+
+z_fun=z[132:length(z)] #functions
+
+functionxml<-function(funname){
+
+#funname=z_fun[3]
+
+paranames=names(formals(funname))
+
+if(length(paranames)==0)
+
+{
+
+temp=paste('"',funname,'"')
+
+temp1=sub(" ","",temp)
+
+temp2=sub(" ","",temp1)
+
+result=paste("<KeyWord name=",temp2,"/>")
+
+}else{
+
+temp=lapply(paranames,function(x) paste('"',x,'"'))
+
+temp1=sapply(temp,function(temp) sub(" ","",temp))
+
+paralines=sapply(temp1,function(x)paste("<Param name=",x,"/>"))
+
+         
+
+funname_temp=paste('"',funname,'"')
+
+funname_temp1=sub(" ","",funname_temp)
+
+funname_temp2=sub(" ","",funname_temp1)
+
+funnameline=paste("<KeyWord name=",funname_temp2,'func="yes" >')
+
+result=c(funnameline,'<Overload retVal=" " >',paralines," </Overload>","</KeyWord>")
+
+#cat(result, file="test.txt", sep="\n")
+
+}
+
+}
+
+paraxml=lapply(z_fun,functionxml)
+
+myresult=paraxml[[1]];
+
+for(i in 2:length(paraxml))
+
+{
+
+myresult=c(myresult,paraxml[[i]])
+
+         
+
+}
+
+#myresult=c(paraxml[[1]],paraxml[[2]])
+
+#cat(myresult, file="test.txt", sep="\n")
+
+         
+
+## output
+
+         
+
+row1='<?xml version="1.0" encoding="Windows-1252" ?>'
+
+row2="<NotepadPlus>"
+
+row3="<AutoComplete>"
+
+row4= '<Environment ignoreCase="no" />'
+
+rowend_1="</AutoComplete>"
+
+rowend="</NotepadPlus>"
+
+myresult1=c(row1,row2,row3,row4,myresult,rowend_1,rowend)
+
+cat(myresult1, file="R.xml", sep="\n")

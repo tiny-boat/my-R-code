@@ -1,0 +1,83 @@
+rm(list=ls()) #清空内存
+
+股票数据的下载（load）、输出（output）及时序图的绘制（draw）
+Stock.iod <- function(stock.name,stock.symbol,start.time,end.time,sour="yahoo"){
+	##1.加载“quantmod”程序包（由 Jeffry 开发）
+	##利用该包，可从雅虎财经（yahoo）、谷歌财经（google）、圣路易斯联邦储备银行的联邦储备经济数据库（PRED）下载金融数据
+
+	library(quantmod)
+
+	##2.设定股票名（name）、获取来源（src）、起止时间(from,to)
+	
+	setSymbolLookup(OBJ = list(name=stock.symbol,src=sour,from=start.time,to=end.time))
+
+	##3.获取股票数据
+
+	getSymbols("OBJ")
+
+	##4.将股票数据输出为一个csv文件
+
+	da <- as.matrix(OBJ) #将 xts、zoo 对象转换为 matrix 对象
+	#更改原英文列名
+	colnames(da) <- c("开盘价","最高价","最低价","收盘价","成交量","调整后收盘价") 
+	write.csv(da,paste("D:\\kaoyan2\\统计学\\0.my note\\其他\\时间序列\\",stock.name,".csv",sep=""))
+
+	##5.输出股票数据收盘价及成交量时序图,图形背景设为白色（默认为黑）
+	##如无需成交量时序图，可添加选项 TA=NULL
+
+	png(paste("D:\\kaoyan2\\统计学\\0.my note\\其他\\时间序列\\",stock.name,".png",sep=""),width=1024,height=768)
+	chartSeries(OBJ,theme="white",name=paste(stock.name,"(","股票代码：",stock.symbol,")",sep=""))
+	dev.off()
+}
+
+#对数收益率绘图
+Lgreturn.stock <- function(stock.name,stock.symbol,start.time,end.time,sour = "yahoo",is.nd = FALSE){
+	
+	library(quantmod)
+
+	if(is.nd = TRUE){
+		stock.name <- paste("^",stock.name,sep="")
+	}else{stock.name <- stock.name}
+	
+	setSymbolLookup(OBJ = list(name=stock.symbol,src=sour,from=start.time,to=end.time))
+
+	getSymbols("OBJ")
+
+	OBJ.rtn <- diff(log(OBJ[,paste(stock.symbol,".Adjusted",sep="")])) #对数收益率
+
+	png(paste("D:\\kaoyan2\\统计学\\0.my note\\其他\\时间序列\\",stock.name,"（对数收益率）",".png",sep=""),width=1024,height=768)
+	chartSeries(OBJ.rtn,theme="white",name=paste(stock.name,"对数收益率","(","股票代码：",stock.symbol,")",sep=""))
+	dev.off()
+}
+
+#收益率绘图
+Return.stock <- function(stock.name,stock.symbol,start.time,end.time,sour="yahoo"){
+	
+	library(quantmod)
+
+	setSymbolLookup(OBJ = list(name=stock.symbol,src=sour,from=start.time,to=end.time))
+
+	getSymbols("OBJ")
+
+	OBJ.rtn <- diff(OBJ[,paste(stock.symbol,".Adjusted",sep="")]) #对数收益率
+
+	png(paste("D:\\kaoyan2\\统计学\\0.my note\\其他\\时间序列\\",stock.name,"（收益率）",".png",sep=""),width=1024,height=768)
+	chartSeries(OBJ.rtn,theme="white",name=paste(stock.name,"收益率","(","股票代码：",stock.symbol,")",sep=""))
+	dev.off()
+}
+
+##上证（.SS）、深城（.SZ）、港股（.HK）
+##601169.SS 为北京银行股票
+
+stock.name <- "苹果公司"
+stock.symbol <- "AAPL"
+start.time <- "2007-01-04"
+end.time <- "2011-12-02"
+sour <- FRED #默认值为yahoo
+is.nd <- TRUE #默认值为FALSE，即不为国债
+
+Stock.iod(stock.name,stock.symbol,start.time,end.time)
+Lgreturn.stock(stock.name,stock.symbol,start.time,end.time)
+Return.stock(stock.name,stock.symbol,start.time,end.time)
+
+	
